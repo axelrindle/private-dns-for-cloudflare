@@ -1,0 +1,13 @@
+[Desktop Entry]
+Version=1.0
+Name=Private DNS for Cloudflare
+Comment=Connect to private DNS workers on Cloudflare
+# The Exec line includes %u to pass the URL to the application
+Exec=/usr/local/bin/cf-priv-dns %u
+Terminal=false
+Type=Application
+Icon=cf-priv-dns
+Categories=Utility;
+StartupWMClass=cf-priv-dns
+
+

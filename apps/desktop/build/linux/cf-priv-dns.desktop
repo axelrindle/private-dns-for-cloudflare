@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Private DNS for Cloudflare
+Exec=cf-priv-dns
+Icon=cf-priv-dns
+Categories=Development;
+Terminal=false
+Keywords=wails
+Version=1.0
+StartupNotify=false

@@ -1,0 +1,217 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "@fontsource-variable/inter";
+@import "shadcn/tailwind.css";
+@plugin "@tailwindcss/typography";
+
+@theme inline {
+    --font-sans: 'Inter Variable', sans-serif;
+    --font-heading: var(--font-sans);
+    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    --color-kumo-brand: var(--cf-kumo-brand);
+    --color-kumo-brand-hover: var(--cf-kumo-brand-hover);
+    --color-kumo-brand-soft: var(--cf-kumo-brand-soft);
+    --color-kumo-brand-dark: var(--cf-kumo-brand-dark);
+    --color-cream: var(--cf-cream);
+    --color-canvas: var(--cf-canvas);
+    --color-ink: var(--cf-ink);
+    --color-ink-soft: var(--cf-ink-soft);
+    --color-nav-muted: var(--cf-nav-muted);
+    --color-hairline: var(--cf-hairline);
+    --color-emergency-red: var(--cf-emergency-red);
+    --color-under-attack: var(--cf-under-attack);
+    --color-compute: var(--cf-compute);
+    --color-storage: var(--cf-storage);
+    --color-ai: var(--cf-ai);
+    --color-sase: var(--cf-sase);
+
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-chart-other: var(--chart-other);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+
+    /* binary scale: 3 / 4 / 6 / 8px, then pill (rounded-full). No 12-20px tier. */
+    --radius-xs: 3px;
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: var(--radius);
+    --radius-xl: var(--radius);
+    --radius-2xl: var(--radius);
+    --radius-3xl: var(--radius);
+    --radius-4xl: var(--radius);
+
+    /* short wave, then rest; pivots near the wrist */
+    --animate-wave: wave 2.5s ease-in-out infinite;
+
+    @keyframes wave {
+        0%, 60%, 100% { transform: rotate(0deg); }
+        10%, 30% { transform: rotate(14deg); }
+        20% { transform: rotate(-8deg); }
+        40% { transform: rotate(-4deg); }
+        50% { transform: rotate(10deg); }
+    }
+}
+
+:root {
+    --cf-kumo-brand: #ff5e1f;
+    --cf-kumo-brand-hover: #ff7038;
+    --cf-kumo-brand-soft: #ff9650;
+    --cf-kumo-brand-dark: #d63c01;
+    --cf-emergency-red: #ed1641;
+    --cf-cream: #fffbf5;
+    --cf-canvas: #ffffff;
+    --cf-ink: #262626;
+    --cf-ink-soft: #414040;
+    --cf-muted: #727272;
+    --cf-nav-muted: #6a6967;
+    --cf-hairline: #f0f0f0;
+    --cf-compute: #0a95ff;
+    --cf-storage: #ee0ddb;
+    --cf-ai: #00bd7d;
+    --cf-sase: #0d9488;
+    --cf-selection-bg: #c82800;
+    --cf-under-attack: #b52932;
+
+    --background: var(--cf-cream);
+    --foreground: var(--cf-ink);
+    --card: var(--cf-canvas);
+    --card-foreground: var(--cf-ink);
+    --popover: var(--cf-canvas);
+    --popover-foreground: var(--cf-ink);
+    --primary: var(--cf-kumo-brand);
+    --primary-foreground: var(--cf-cream);
+    --secondary: var(--cf-canvas);
+    --secondary-foreground: var(--cf-ink);
+    /* near-white hover fill, hairline is border-only */
+    --muted: color-mix(in srgb, var(--cf-ink) 4%, var(--cf-canvas));
+    --muted-foreground: var(--cf-muted);
+    --accent: color-mix(in srgb, var(--cf-ink) 4%, var(--cf-canvas));
+    --accent-foreground: var(--cf-ink);
+    --destructive: var(--cf-emergency-red);
+    --border: var(--cf-hairline);
+    --input: var(--cf-hairline);
+    --ring: var(--cf-kumo-brand);
+    --chart-1: var(--cf-kumo-brand);
+    --chart-2: var(--cf-compute);
+    --chart-3: var(--cf-storage);
+    --chart-4: var(--cf-ai);
+    --chart-5: var(--cf-sase);
+    /* neutral fold-in series ("Other") */
+    --chart-other: #8f8f8f;
+    --radius: 8px;
+    --sidebar: var(--cf-canvas);
+    --sidebar-foreground: var(--cf-ink);
+    --sidebar-primary: var(--cf-kumo-brand);
+    --sidebar-primary-foreground: var(--cf-cream);
+    --sidebar-accent: color-mix(in srgb, var(--cf-ink) 4%, var(--cf-canvas));
+    --sidebar-accent-foreground: var(--cf-ink);
+    --sidebar-border: var(--cf-hairline);
+    --sidebar-ring: var(--cf-kumo-brand);
+}
+
+.dark {
+    --background: color-mix(in srgb, var(--cf-ink) 75%, #000000);
+    --foreground: var(--cf-cream);
+    --card: var(--cf-ink);
+    --card-foreground: var(--cf-cream);
+    --popover: var(--cf-ink);
+    --popover-foreground: var(--cf-cream);
+    --primary: var(--cf-kumo-brand);
+    --primary-foreground: var(--cf-cream);
+    --secondary: var(--cf-ink);
+    --secondary-foreground: var(--cf-cream);
+    --muted: var(--cf-ink-soft);
+    --muted-foreground: color-mix(in srgb, var(--cf-cream) 60%, var(--cf-ink));
+    --accent: var(--cf-ink-soft);
+    --accent-foreground: var(--cf-cream);
+    --destructive: var(--cf-emergency-red);
+    --border: var(--cf-ink-soft);
+    --input: var(--cf-ink-soft);
+    --ring: var(--cf-kumo-brand-dark);
+    --sidebar: var(--cf-ink);
+    --sidebar-foreground: var(--cf-cream);
+    --sidebar-primary: var(--cf-kumo-brand);
+    --sidebar-primary-foreground: var(--cf-cream);
+    --sidebar-accent: var(--cf-ink-soft);
+    --sidebar-accent-foreground: var(--cf-cream);
+    --sidebar-border: var(--cf-ink-soft);
+    --sidebar-ring: var(--cf-kumo-brand-dark);
+    /* brand orange is too light for the dark chart band, step down */
+    --chart-1: #f04f0c;
+    --chart-other: #8a8a8a;
+}
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+
+    body {
+        @apply bg-background text-foreground font-sans;
+        font-size: 16px;
+        letter-spacing: -0.04px;
+    }
+
+    /* display weight stays at 500, tracking does the work */
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+        @apply font-heading font-medium;
+        letter-spacing: -0.025em;
+    }
+
+    code,
+    kbd,
+    pre,
+    samp {
+        @apply font-mono;
+    }
+
+    ::selection {
+        background: var(--cf-selection-bg);
+        color: var(--cf-cream);
+    }
+}
+
+html,
+body,
+#root {
+    height: 100%;
+    width: 100%;
+}
+
+#root {
+    overflow-y: scroll;
+}

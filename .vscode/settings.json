@@ -1,0 +1,63 @@
+{
+  "files.readonlyInclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/routeTree.gen.ts": true,
+  },
+  "explorer.autoRevealExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/routeTree.gen.ts": true,
+  },
+  "files.watcherExclude": {
+    ".git/objects/**": true,
+    ".git/subtree-cache/**": true,
+    "*/.git/objects/**": true,
+    "*/.git/subtree-cache/**": true,
+    "**/routeTree.gen.ts": true,
+  },
+  "todo-tree.filtering.excludeGlobs": [
+    "**/node_modules/**/*",
+    "**/dist/**/*",
+  ],
+
+  "files.associations": {
+    "*.jsonc.gen": "jsonc"
+  },
+
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.patterns": {
+    "package.json": "*.config.ts, tsconfig.json, bun.lock, *.tsbuildinfo",
+    ".env": ".env.*",
+    ".gitignore": ".*ignore",
+    ".dev.vars": ".dev.vars.*",
+    "wrangler.jsonc": "wrangler.*",
+  },
+
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "js/ts.preferences.importModuleSpecifierEnding": "minimal",
+  "js/ts.preferences.quoteStyle": "single",
+  "js/ts.format.semicolons": "remove",
+
+  "eslint.workingDirectories": [
+    "apps/dns",
+  ],
+  "eslint.format.enable": true,
+  "editor.defaultFormatter": null,
+  "editor.linkedEditing": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true,
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+    "editor.formatOnSave": true,
+  },
+}

@@ -1,0 +1,15 @@
+{
+	"fixed": {
+		"file_version": "0.0.1"
+	},
+	"info": {
+		"0409": {
+			"ProductVersion": "0.0.1",
+			"CompanyName": "Axel Rindle",
+			"FileDescription": "Connect to private DNS workers on Cloudflare",
+			"LegalCopyright": "Not affiliated with Cloudflare, Inc.",
+			"ProductName": "Private DNS for Cloudflare",
+			"Comments": "Connect to private DNS workers on Cloudflare"
+		}
+	}
+}

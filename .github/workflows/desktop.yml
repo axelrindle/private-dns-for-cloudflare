@@ -1,0 +1,112 @@
+name: Desktop App
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - apps/desktop/**
+      - .github/workflows/desktop.yml
+  pull_request:
+    paths:
+      - apps/desktop/**
+      - .github/workflows/desktop.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+    working-directory: apps/desktop
+
+jobs:
+  build:
+    name: Build & Package (${{ matrix.os }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux
+            runner: ubuntu-24.04
+            artifact: |
+              apps/desktop/bin/*.AppImage
+              apps/desktop/bin/*.deb
+              apps/desktop/bin/*.rpm
+              apps/desktop/bin/*.pkg.tar.zst
+          - os: windows
+            runner: windows-latest
+            artifact: apps/desktop/bin/*-installer.exe
+          - os: macos
+            runner: macos-latest
+            artifact: apps/desktop/bin/*.app.zip
+    steps:
+      - name: Enable symlinks
+        if: runner.os == 'Windows'
+        working-directory: .
+        run: git config --global core.symlinks true
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential pkg-config libgtk-4-dev libwebkitgtk-6.0-dev libsoup-3.0-dev
+
+      - name: Install NSIS
+        if: runner.os == 'Windows'
+        run: |
+          if ! command -v makensis >/dev/null 2>&1; then
+            choco install nsis -y --no-progress
+          fi
+          echo "C:\\Program Files (x86)\\NSIS" >> "$GITHUB_PATH"
+
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: apps/desktop/go.mod
+          cache-dependency-path: apps/desktop/go.sum
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: latest
+
+      - uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+
+      - name: Install wails3
+        run: go install "github.com/wailsapp/wails/v3/cmd/wails3@$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v3)"
+
+      - name: Install frontend dependencies
+        working-directory: apps/desktop/frontend
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: task build
+
+      - name: Package
+        run: task package
+
+      - name: Archive app bundle
+        if: runner.os == 'macOS'
+        working-directory: apps/desktop/bin
+        run: |
+          for app in *.app; do
+            ditto -c -k --keepParent "$app" "$app.zip"
+          done
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: desktop-${{ matrix.os }}
+          path: ${{ matrix.artifact }}
+          if-no-files-found: error
+          retention-days: 1
