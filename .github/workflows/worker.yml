@@ -51,6 +51,9 @@ jobs:
       - name: Generate types
         run: cp .dev.vars.example .dev.vars && bun run cf-typegen
 
+      - name: Wrangler config
+        run: cp wrangler.env.example wrangler.env
+
       - name: Lint
         run: bun run lint
 
