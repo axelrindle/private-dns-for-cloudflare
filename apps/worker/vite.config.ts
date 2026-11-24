@@ -22,6 +22,10 @@ const wranglerEnv: Plugin = {
   name: 'wrangler-env',
   generateBundle: (_opts, bundle, _write) => {
     const wrangler = bundle['wrangler.json']
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (wrangler === undefined) {
+      return
+    }
 
     if (wrangler.type !== 'asset') {
       return
