@@ -1,59 +1,90 @@
-# Welcome to Your New Wails3 Project!
+# Desktop Connector
 
-Congratulations on generating your Wails3 application! This README will guide you through the next steps to get your project up and running.
+Desktop app that runs a local DNS forwarder and sends lookups for one private domain (e.g. `home`) to the [DNS worker](../worker/) over DNS-over-HTTPS. All other lookups keep using your regular DNS.
 
-## Getting Started
+Built with [Wails 3](https://v3.wails.io) (Go backend) and React, TanStack Router/Query and Tailwind in the frontend.
 
-1. Navigate to your project directory in the terminal.
+## How it works
 
-2. To run your application in development mode, use the following command:
-
+1. The forwarder listens on `127.0.0.1` and `::1` (UDP and TCP) on a local port, default `15353`.
+2. Each query is sent unchanged as `POST <endpoint>/dns/query` with the configured bearer token. The worker's answer goes back to the client as is.
+3. On macOS the app writes `/etc/resolver/<domain>` (see `man 5 resolver`), so the system sends lookups for `<domain>` and every name below it to the forwarder:
    ```
-   wails3 dev
+   nameserver 127.0.0.1
+   nameserver ::1
+   port 15353
    ```
+   Writing this file needs root, so the app asks for the admin password whenever domain or port change and when the app is reset.
 
-   This will start your application and enable hot-reloading for both frontend and backend changes.
+> [!NOTE]
+> The resolver integration exists only on macOS. On Windows and Linux the forwarder runs, but you have to point your system resolver at it yourself.
 
-3. To build your application for production, use:
+## Features
 
-   ```
-   wails3 build
-   ```
+- Setup wizard: endpoint, token, optional "Skip TLS verification", port and domain. The endpoint is verified before saving: the app calls `/.well-known/info` with a random UUIDv7 nonce and expects it back.
+- Tray icon that shows whether the forwarder is running. The tray menu toggles it, a click opens the window. Closing the window only hides it.
+- Chart with queries per record type for each minute of the last hour (kept in memory only).
+- Autostart on login.
+- Reset: removes the resolver file, stops the forwarder, disables autostart and deletes config and statistics.
 
-   This will create a production-ready executable in the `build` directory.
+The configuration, including the token, is stored as JSON in the OS keyring (macOS Keychain, Windows Credential Manager, Secret Service on Linux) under the service name `de.axelrindle.cf-priv-dns`.
 
-## Exploring Wails3 Features
+## Development
 
-Now that you have your project set up, it's time to explore the features that Wails3 offers:
+Requirements:
 
-1. **Check out the examples**: The best way to learn is by example. Visit the `examples` directory in the `v3/examples` directory to see various sample applications.
+- Go (version from [go.mod](go.mod))
+- [Bun](https://bun.sh)
+- [Task](https://taskfile.dev)
+- Wails 3 CLI, same version as in `go.mod`:
+  ```sh
+  go install "github.com/wailsapp/wails/v3/cmd/wails3@$(go list -m -f '{{.Version}}' github.com/wailsapp/wails/v3)"
+  ```
+- Linux only: `libgtk-4-dev`, `libwebkitgtk-6.0-dev`, `libsoup-3.0-dev`
 
-2. **Run an example**: To run any of the examples, navigate to the example's directory and use:
+```sh
+cd frontend && bun install && cd ..
+task dev        # runs wails3 dev with hot reload, Vite on port 9245 (WAILS_VITE_PORT)
+```
 
-   ```
-   go run .
-   ```
+| Task           | Purpose                                                        |
+| -------------- | -------------------------------------------------------------- |
+| `task build`   | Generates bindings and builds the binary into `bin/`           |
+| `task package` | Builds the platform package (see below)                        |
+| `task run`     | Runs the built app                                             |
+| `task bindings`| Regenerates the TypeScript bindings in `frontend/src/gen/`     |
+| `go test ./...`| Unit tests for config, DNS parsing, resolver and statistics    |
 
-   Note: Some examples may be under development during the alpha phase.
+Set `GOOS` to cross-compile, e.g. `task build GOOS=windows`. Docker-based cross-compilation is prepared via `task setup:docker`.
 
-3. **Explore the documentation**: Visit the [Wails3 documentation](https://v3.wails.io/) for in-depth guides and API references.
+### Project layout
 
-4. **Join the community**: Have questions or want to share your progress? Join the [Wails Discord](https://discord.gg/JDdSxwjhGf) or visit the [Wails discussions on GitHub](https://github.com/wailsapp/wails/discussions).
+```
+main.go                 window, tray and service wiring
+internal/config         config struct and validation
+internal/dns            DoH forwarder (UDP/TCP listeners, HTTP client)
+internal/resolver       /etc/resolver handling on macOS, no-op elsewhere
+internal/service        services exposed to the frontend (DNS, keyring, stats, autostart, upstream check)
+internal/stats          per-minute query counters
+frontend/               React UI
+build/                  Wails build config and platform packaging
+```
 
-## Project Structure
+## Packaging
 
-Take a moment to familiarize yourself with your project structure:
+`task package` produces:
 
-- `frontend/`: Contains your frontend code (HTML, CSS, JavaScript/TypeScript)
-- `main.go`: The entry point of your Go backend
-- `app.go`: Define your application structure and methods here
-- `wails.json`: Configuration file for your Wails project
+| Platform | Output in `bin/`                                   |
+| -------- | -------------------------------------------------- |
+| macOS    | `.app` bundle                                      |
+| Windows  | NSIS installer (`*-installer.exe`)                 |
+| Linux    | AppImage, `.deb`, `.rpm`, `.pkg.tar.zst`           |
 
-## Next Steps
+CI ([desktop.yml](../../.github/workflows/desktop.yml)) builds and packages all three platforms on every change below `apps/desktop` and uploads the results as workflow artifacts (kept for one day). The builds are not signed.
 
-1. Modify the frontend in the `frontend/` directory to create your desired UI.
-2. Add backend functionality in `main.go`.
-3. Use `wails3 dev` to see your changes in real-time.
-4. When ready, build your application with `wails3 build`.
+Product name, identifier and version are set in [build/config.yml](build/config.yml). After changing them run `wails3 task common:update:build-assets`.
 
-Happy coding with Wails3! If you encounter any issues or have questions, don't hesitate to consult the documentation or reach out to the Wails community.
+## Known limitations
+
+- The auto updater in [updater.go](updater.go) is not active yet.
+- Only one domain can be configured.
