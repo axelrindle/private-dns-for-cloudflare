@@ -1,9 +1,8 @@
-import { defineConfig, Plugin } from 'vite'
+import { defineConfig } from 'vite'
 import { cloudflare } from '@cloudflare/vite-plugin'
 import basicSsl from '@vitejs/plugin-basic-ssl'
 import { execSync } from 'node:child_process'
 import pkg from './package.json' with { type: 'json' }
-import dotenv from 'dotenv'
 
 function resolveCommit(): string {
   if (process.env.GITHUB_SHA) {
@@ -18,45 +17,6 @@ function resolveCommit(): string {
   }
 }
 
-const wranglerEnv: Plugin = {
-  name: 'wrangler-env',
-  generateBundle: (_opts, bundle, _write) => {
-    const wrangler = bundle['wrangler.json']
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (wrangler === undefined) {
-      return
-    }
-
-    if (wrangler.type !== 'asset') {
-      return
-    }
-
-    let source = ''
-    if (typeof wrangler.source === 'string') {
-      source = wrangler.source
-    }
-    else if (wrangler.source instanceof Uint8Array) {
-      source = wrangler.source.toString()
-    }
-    else {
-      throw new Error('failed to read wrangler.json source')
-    }
-
-    dotenv.config({
-      quiet: true,
-      path: [
-        'wrangler.env',
-        'wrangler.env.production',
-      ],
-      override: true,
-    })
-
-    wrangler.source = source.replaceAll(/\$\{(?<var>[A-Z0-9_]+)\}/g, function (_, v) {
-      return process.env[`CF_${v}`] ?? '__UNKNOWN__'
-    })
-  },
-}
-
 export default defineConfig({
   define: {
     __BUILD_VERSION__: JSON.stringify(pkg.version),
@@ -67,7 +27,6 @@ export default defineConfig({
     minify: true,
   },
   plugins: [
-    wranglerEnv,
     cloudflare(),
     basicSsl(),
   ],

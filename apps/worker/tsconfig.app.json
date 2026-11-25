@@ -10,9 +10,12 @@
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "types": [
+      "./.cloudflare/types/index.d.ts"
+    ]
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
   ]
 }

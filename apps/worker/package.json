@@ -7,12 +7,12 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "deploy": "vite build && wrangler deploy --secrets-file .dev.vars.production",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings src/cloudflare.d.ts",
+    "deploy": "cf deploy --secrets-file .dev.vars.production",
+    "cf-typegen": "cf workers types",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:pull": "drizzle-kit pull",
+    "db:migrate": "bun --env-file=cloudflare.env --env-file=cloudflare.env.production run db:migrate:apply --local",
+    "db:migrate:remote": "bun --env-file=cloudflare.env --env-file=cloudflare.env.production run db:migrate:apply",
+    "db:migrate:apply": "cf d1 migrations apply $CF_D1_DATABASE_ID --dir drizzle --pattern 'drizzle/*/migration.sql'",
     "db:studio": "drizzle-kit studio --verbose",
     "db:seed": "bun run drizzle/seed/index.ts",
     "test": "vitest run",
@@ -30,7 +30,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.47.0",
+    "@cloudflare/vite-plugin": "^2.0.0-rc.5",
     "@cloudflare/vitest-pool-workers": "^0.18.8",
     "@eslint/config-inspector": "^3.1.0",
     "@scalar/types": "^0.9.2",
@@ -38,6 +38,7 @@
     "@types/bun": "^1.3.14",
     "@types/node": "^26.1.1",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
+    "cf": "^1.0.0-rc.5",
     "dotenv": "^18.0.9",
     "drizzle-kit": "^1.0.0-rc.4",
     "eslint": "^10.7.0",
@@ -45,7 +46,6 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.74.0",
     "vite": "^8.1.5",
-    "vitest": "^4.1.0",
-    "wrangler": "^4.156.0"
+    "vitest": "^4.1.0"
   }
 }

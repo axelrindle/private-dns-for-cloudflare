@@ -19,6 +19,7 @@
   },
   "include": [
     "drizzle.config.ts",
+    "cloudflare.config.ts",
     "vite.config.ts",
     "vitest.config.ts",
     "eslint.config.js",

@@ -1,7 +1,7 @@
 import { HtmlRenderingConfiguration } from '@scalar/types/api-reference'
 import { DatabaseClient } from './init/db'
 
-export type AppBindings = CloudflareBindings & {
+export type AppBindings = Cloudflare.Env & {
   drizzle: DatabaseClient
 }
 

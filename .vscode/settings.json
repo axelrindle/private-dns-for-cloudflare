@@ -34,7 +34,7 @@
     ".env": ".env.*",
     ".gitignore": ".*ignore",
     ".dev.vars": ".dev.vars.*",
-    "wrangler.jsonc": "wrangler.*",
+    "cloudflare.env": "cloudflare.env.*",
   },
 
   "js/ts.preferences.importModuleSpecifier": "non-relative",

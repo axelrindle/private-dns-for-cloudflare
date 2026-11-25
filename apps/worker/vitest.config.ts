@@ -21,7 +21,7 @@ function readDrizzleMigrations(dir: string): D1Migration[] {
 }
 
 // Tests run fully local: define the bindings via miniflare instead of
-// reading wrangler.jsonc (which references deployment specific variables).
+// reading cloudflare.config.ts (which needs deployment specific variables).
 // The cloudflareTest plugin also wires the pool and provides the
 // `cloudflare:test` module.
 export default defineConfig({

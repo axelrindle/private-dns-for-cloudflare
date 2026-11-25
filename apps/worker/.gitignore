@@ -1,6 +1,6 @@
-.wrangler/
+.cloudflare/
 dist/
 node_modules/
 
-src/cloudflare.d.ts
-wrangler.env
+cloudflare.env*
+!cloudflare.env.example
