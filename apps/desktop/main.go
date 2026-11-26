@@ -1,21 +1,21 @@
 package main
 
 import (
+	"context"
 	"embed"
-
-	"github.com/axelrindle/private-dns-for-cloudflare/internal/service"
-	"github.com/axelrindle/private-dns-for-cloudflare/internal/stats"
-
+	"flag"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
-	"github.com/wailsapp/wails/v3/pkg/events"
+	"go.uber.org/fx"
 )
 
 //go:embed all:frontend/dist
 var assets embed.FS
 
-var appId = "de.axelrindle.cf-priv-dns"
+const appId = "de.axelrindle.cf-priv-dns"
 
 var (
 	//go:embed assets/phosphor/cloud-duotone.png
@@ -28,79 +28,75 @@ var (
 	iconWarn []byte
 )
 
+// Set at build time via -ldflags -X, see LDFLAGS in Taskfile.yml.
+var (
+	Version        = "dev"
+	CommitHash     = "unknown"
+	BuildTimestamp = "unknown"
+)
+
+var (
+	flagShowVersion bool
+)
+
+func buildVersion() string {
+	return fmt.Sprintf("%s-%s (%s)", Version, CommitHash, BuildTimestamp)
+}
+
+func init() {
+	flag.BoolVar(&flagShowVersion, "version", false, "show program version")
+	flag.Parse()
+	if flagShowVersion {
+		fmt.Println(buildVersion())
+		os.Exit(0)
+	}
+
+	log.SetOutput(os.Stderr)
+}
+
 func main() {
-	kr := service.NewKeyringService(appId)
-	st := stats.New()
-	dns := service.NewDnsService(kr, st)
+	var app *application.App
 
-	app := application.New(application.Options{
-		Name:        "Private DNS for Cloudflare",
-		Description: "Connect to a private DNS worker on Cloudflare.",
-		SingleInstance: &application.SingleInstanceOptions{
-			UniqueID: appId,
-		},
-		Services: []application.Service{
-			application.NewService(kr),
-			application.NewService(dns),
-			application.NewService(service.NewStatsService(st)),
-			application.NewService(&service.AutostartService{}),
-			application.NewService(&service.UpstreamService{}),
-		},
-		Assets: application.AssetOptions{
-			Handler:        application.AssetFileServerFS(assets),
-			DisableLogging: true,
-		},
-	})
-
-	// update(app)
-
-	w := app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Name: "win",
-		// Window sized to the golden ratio (1000 / 618 ≈ 1.618).
-		Width:                 1000,
-		Height:                618,
-		DisableResize:         true,
-		FullscreenButtonState: application.ButtonDisabled,
-		BackgroundColour:      application.NewRGB(6, 7, 15),
-		URL:                   "/",
-		DevToolsEnabled:       app.Env.Info().Debug,
-	})
-
-	// Hide instead of destroying the window, so the tray can show it again.
-	w.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
-		w.Hide()
-		e.Cancel()
-	})
-
-	tray := app.SystemTray.New()
-	tray.SetIcon(iconStopped)
-	tray.OnClick(func() {
-		log.Print("showing window")
-		w.Show()
-	})
-
-	menu := app.NewMenu()
-	menu.Add("Toggle").OnClick(func(ctx *application.Context) {
-		if dns.IsRunning() {
-			dns.Stop()
-		} else {
-			dns.Start()
-		}
-	})
-
-	tray.SetMenu(menu)
-
-	defer app.Event.On(service.EventDnsRunning, func(event *application.CustomEvent) {
-		running := event.Data.(bool)
-		if running {
-			tray.SetIcon(iconRunning)
-		} else {
-			tray.SetIcon(iconStopped)
-		}
-	})()
-
-	err := app.Run()
-	if err != nil {
+	fxApp := fx.New(
+		fx.Provide(
+			provideKeyringService,
+			provideStatistics,
+			provideStatisticService,
+			provideDnsService,
+			provideAutostartService,
+			provideUpstreamService,
+			provideBuildInfoService,
+		),
+		fx.Provide(
+			provideApplication,
+			provideWindow,
+			provideTray,
+		),
+		// fx constructs lazily: request window and tray so they get created.
+		fx.Invoke(func(*application.WebviewWindow, *application.SystemTray) {}),
+		fx.Populate(&app),
+	)
+	if err := fxApp.Err(); err != nil {
 		log.Fatal(err)
 	}
+
+	// app.Run blocks on the main thread (required on macOS), so it runs
+	// between fx Start and Stop instead of inside an fx.Invoke.
+	ctx := context.Background()
+	if err := fxApp.Start(ctx); err != nil {
+		log.Fatal(err)
+	}
+
+	runErr := app.Run()
+
+	if err := fxApp.Stop(ctx); err != nil {
+		log.Print(err)
+	}
+	if runErr != nil {
+		log.Fatal(runErr)
+	}
+
+	// if err := initUpdater(app); err != nil {
+	// 	log.Fatal(err)
+	// }
 }

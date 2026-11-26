@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -9,7 +8,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/updater/providers/endpoint"
 )
 
-func update(app *application.App) error {
+func initUpdater(app *application.App) error {
 	updateManifest, err := endpoint.New(endpoint.Config{
 		URL: "https://raw.githubusercontent.com/axelrindle/private-dns-for-cloudflare/refs/heads/main/apps/desktop/updater/{{channel}}.json",
 	})
@@ -25,12 +24,6 @@ func update(app *application.App) error {
 	})
 	if err != nil {
 		log.Printf("updater init error: %v", err)
-		return err
-	}
-
-	err = app.Updater.CheckAndInstall(context.Background())
-	if err != nil {
-		log.Printf("updater install error: %v", err)
 		return err
 	}
 

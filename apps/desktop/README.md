@@ -60,7 +60,8 @@ Set `GOOS` to cross-compile, e.g. `task build GOOS=windows`. Docker-based cross-
 ### Project layout
 
 ```
-main.go                 window, tray and service wiring
+main.go                 fx application setup and lifecycle
+providers.go            fx constructors for services, window and tray
 internal/config         config struct and validation
 internal/dns            DoH forwarder (UDP/TCP listeners, HTTP client)
 internal/resolver       /etc/resolver handling on macOS, no-op elsewhere
@@ -83,6 +84,8 @@ build/                  Wails build config and platform packaging
 CI ([desktop.yml](../../.github/workflows/desktop.yml)) builds and packages all three platforms on every change below `apps/desktop` and uploads the results as workflow artifacts (kept for one day). The builds are not signed.
 
 Product name, identifier and version are set in [build/config.yml](build/config.yml). After changing them run `wails3 task common:update:build-assets`.
+
+The About page shows version, commit and build time of the binary. Every build task links them in via `LDFLAGS` in [Taskfile.yml](Taskfile.yml): the version is the latest git tag (`0.0.0` without tags), the timestamp is UTC. A plain `go build` without these flags shows `dev`. Docker cross builds pass them as `EXTRA_LDFLAGS`, so rebuild the image with `wails3 task setup:docker` once.
 
 ## Known limitations
 

@@ -4,16 +4,8 @@ import wails from "@wailsio/runtime/plugins/vite";
 import tailwindcss from '@tailwindcss/vite'
 import { devtools } from '@tanstack/devtools-vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
-import { readFileSync } from 'node:fs'
-
-// build/config.yml is the single source of truth for the app version.
-const buildConfig = readFileSync(new URL('../build/config.yml', import.meta.url), 'utf8')
-const appVersion = buildConfig.match(/^\s+version:\s*"([^"]+)"/m)?.[1] ?? 'unknown'
 
 export default defineConfig({
-    define: {
-        __APP_VERSION__: JSON.stringify(appVersion),
-    },
     plugins: [
         devtools(),
         tailwindcss(),

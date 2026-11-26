@@ -11,6 +11,16 @@ vars:
   # tasks below dispatch to the matching platform Taskfile via this variable.
   GOOS: '{{.GOOS | default OS}}'
   BINDINGS_DIR: "./frontend/src/gen/bindings"
+  APP_VERSION:
+    sh: git describe --tags --abbrev=0 2>/dev/null || echo "0.0.0"
+  APP_COMMIT_HASH:
+    sh: git rev-parse --short HEAD 2>/dev/null || echo "abcdef1234567890"
+  APP_BUILD_TIMESTAMP:
+    sh: date -u '+%Y-%m-%dT%H:%M:%SZ'
+  # Linked into every go build of the platform Taskfiles (and the Docker cross
+  # build via EXTRA_LDFLAGS). No quotes around the values: BUILD_FLAGS also ends
+  # up inside a single-quoted shell argument in common:generate:bindings.
+  LDFLAGS: "-X main.Version={{.APP_VERSION}} -X main.CommitHash={{.APP_COMMIT_HASH}} -X main.BuildTimestamp={{.APP_BUILD_TIMESTAMP}}"
 
 includes:
   common: ./build/Taskfile.yml
@@ -45,8 +55,6 @@ tasks:
     summary: Runs the application in development mode
     cmds:
       - cmd: wails3 dev -config ./build/config.yml -port {{.VITE_PORT}}
-    env:
-      EXTRA_TAGS: private_mac_apis
 
   install:msix:tools:
     summary: Installs tools required for Windows MSIX packaging

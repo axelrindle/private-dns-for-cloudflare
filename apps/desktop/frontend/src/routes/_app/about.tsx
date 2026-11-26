@@ -1,14 +1,23 @@
+import { buildInfoOptions } from '#/api/build-info.query'
 import { AppIcon } from '#/components/app/app-icon'
 import { Centered } from '#/components/app/centered'
 import { Button } from '#/components/ui/button'
 import { Card, CardContent } from '#/components/ui/card'
 import { ArrowSquareOutIcon, CloudIcon, GithubLogoIcon, Icon } from '@phosphor-icons/react'
+import { useSuspenseQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { Browser } from '@wailsio/runtime'
 
 export const Route = createFileRoute('/_app/about')({
     component: RouteComponent,
+    loader: ({ context: { queryClient } }) => queryClient.query(buildInfoOptions),
 })
+
+// Dev builds without ldflags keep the Go placeholder, which is not a date.
+function formatTimestamp(value: string) {
+    const date = new Date(value)
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+}
 
 const links: Array<{ label: string, url: string, icon: Icon }> = [
     {
@@ -24,6 +33,8 @@ const links: Array<{ label: string, url: string, icon: Icon }> = [
 ]
 
 function RouteComponent() {
+    const { data: buildInfo } = useSuspenseQuery(buildInfoOptions)
+
     return (
         <Centered>
             <AppIcon size={96} className='text-kumo-brand' />
@@ -33,20 +44,19 @@ function RouteComponent() {
                     Private DNS for Cloudflare
                 </h1>
                 <p className='text-sm text-muted-foreground'>
-                    Version {__APP_VERSION__}
+                    Version {buildInfo.version}
+                </p>
+                <p className='text-xs text-muted-foreground'>
+                    Commit <span className='font-mono'>{buildInfo.commitHash}</span>
+                    {' · '}
+                    Built {formatTimestamp(buildInfo.buildTimestamp)}
                 </p>
             </div>
 
             <Card className='w-full'>
                 <CardContent className='text-sm text-muted-foreground'>
-                    <p>
-                        Runs a local DNS resolver that forwards queries for your private
-                        domains to a DNS-over-HTTPS worker on Cloudflare. All other queries
-                        go to the system resolver as usual.
-                    </p>
-                    <p>
-                        Records live in your own Cloudflare account, so every device running
-                        this app resolves the same names without a self-hosted DNS server.
+                    <p className='text-center'>
+                        Connect to a DNS-over-HTTPS (DoH) worker on Cloudflare
                     </p>
                 </CardContent>
             </Card>
